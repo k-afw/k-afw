@@ -20,11 +20,9 @@
       display: inline-block;
       background: #fff;
       text-align: left;
-      max-width: 400px;
     }
     .fortune-box h3 {
       text-align: center;
-      margin-bottom: 10px;
     }
     .emoji {
       font-size: 18px;
@@ -34,10 +32,6 @@
       width: 80px;
       padding: 6px;
       margin: 4px;
-    }
-    button {
-      padding: 8px 16px;
-      font-weight: bold;
     }
   </style>
 </head>
@@ -74,15 +68,14 @@
         "Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake",
         "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig"
       ];
-      const baseYear = 2020; // 기준: 2020년이 쥐띠
-      return ddi[(year - baseYear + 12) % 12];
+      return ddi[year % 12];
     }
 
     async function generateFortune() {
       const year = parseInt(document.getElementById('year').value);
       const month = parseInt(document.getElementById('month').value);
       const day = parseInt(document.getElementById('day').value);
-      if (!year || !month || !day) return alert('Please enter a valid birthdate.');
+      if (!year || !month || !day) return alert('Please enter valid birthdate.');
 
       const zodiac = getZodiac(month, day);
       const ddi = getDdi(year);
@@ -91,8 +84,10 @@
       const wealth = await fetchJson('bojo-wealth.json', 'wealth');
       const love = await fetchJson('bojo-love.json', 'love');
       const health = await fetchJson('bojo-health.json', 'health');
-      const colors = await fetchJson('bojo-color-number.json', 'lucky_color');
-      const numbers = await fetchJson('bojo-color-number.json', 'lucky_number');
+
+      const colorNumData = await fetch('bojo-color-number.json').then(res => res.json());
+      const colors = colorNumData['lucky_color'];
+      const numbers = colorNumData['lucky_number'];
 
       const html = `
         <h3>${ddi} + ${zodiac}</h3>
@@ -112,10 +107,10 @@
       try {
         const res = await fetch(url);
         const json = await res.json();
-        return json[key] || [];
-      } catch (err) {
-        console.error(`❌ Error loading ${url}:`, err);
-        return [`Error loading ${key}`];
+        return json[key];
+      } catch (e) {
+        console.error(`Error loading ${url}:`, e);
+        return ["(Failed to load data)"];
       }
     }
 
@@ -125,4 +120,3 @@
   </script>
 </body>
 </html>
-<!-- Trigger rebuild -->
