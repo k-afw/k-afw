@@ -2,56 +2,126 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>K-AFW Fortune JSON Files</title>
+  <title>K-AFW Daily Fortune</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       background: #fdfdfd;
       color: #333;
-      padding: 40px;
       text-align: center;
+      padding: 30px;
     }
-    
-    h1 {
-      color: #222;
-      font-size: 2rem;
+    .fortune-box {
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      padding: 20px;
+      border-radius: 10px;
+      display: inline-block;
+      background: #fff;
+      text-align: left;
+      max-width: 400px;
     }
-    p {
-      margin-bottom: 1em;
+    .fortune-box h3 {
+      text-align: center;
+      margin-bottom: 10px;
     }
-    ul {
-      list-style: none;
-      padding: 0;
+    .emoji {
+      font-size: 18px;
+      margin-right: 5px;
     }
-    li {
-      margin: 0.5em 0;
+    input {
+      width: 80px;
+      padding: 6px;
+      margin: 4px;
     }
-    a {
-      color: #0066cc;
-      text-decoration: none;
+    button {
+      padding: 8px 16px;
       font-weight: bold;
-    }
-    a:hover {
-      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <h1>Welcome to K-AFW JSON Data</h1>
-  <p>This page serves JSON data for your fortune automation system.</p>
-  <p>📁 Available JSON files:</p>
- 
-  <ul>
-    <li><a href="bojo-wealth.json" target="_blank">bojo-wealth.json</a></li>
-    <li><a href="bojo-love.json" target="_blank">bojo-love.json</a></li>
-    <li><a href="bojo-health.json" target="_blank">bojo-health.json</a></li>
-    <li><a href="bojo-color-number.json" target="_blank">bojo-color-number.json</a></li>
-    <li><a href="bojo-summary.json" target="_blank">bojo-summary.json</a></li>
+  <h2>🔮 Discover Your Fortune</h2>
+  <p>Enter your birthdate:</p>
+  <input type="number" id="year" placeholder="YYYY" />
+  <input type="number" id="month" placeholder="MM" />
+  <input type="number" id="day" placeholder="DD" />
+  <br /><br />
+  <button onclick="generateFortune()">Get My Fortune</button>
 
-  </ul>
-  <p>🔗 Hosted on <a href="https://github.com/k-afw/k-afw" target="_blank">GitHub Repository</a></p>
+  <div id="result" class="fortune-box" style="display: none;"></div>
+
+  <script>
+    const zodiacSigns = [
+      "Capricorn", "Aquarius", "Pisces", "Aries", "Taurus", "Gemini",
+      "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius"
+    ];
+
+    function getZodiac(month, day) {
+      const zodiacDates = [
+        [20, "Aquarius"], [19, "Pisces"], [21, "Aries"], [20, "Taurus"],
+        [21, "Gemini"], [23, "Cancer"], [23, "Leo"], [23, "Virgo"],
+        [23, "Libra"], [23, "Scorpio"], [22, "Sagittarius"], [22, "Capricorn"]
+      ];
+      return day < zodiacDates[month - 1][0]
+        ? zodiacDates[(month - 2 + 12) % 12][1]
+        : zodiacDates[month - 1][1];
+    }
+
+    function getDdi(year) {
+      const ddi = [
+        "Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake",
+        "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig"
+      ];
+      const baseYear = 2020; // 기준: 2020년이 쥐띠
+      return ddi[(year - baseYear + 12) % 12];
+    }
+
+    async function generateFortune() {
+      const year = parseInt(document.getElementById('year').value);
+      const month = parseInt(document.getElementById('month').value);
+      const day = parseInt(document.getElementById('day').value);
+      if (!year || !month || !day) return alert('Please enter a valid birthdate.');
+
+      const zodiac = getZodiac(month, day);
+      const ddi = getDdi(year);
+
+      const summary = await fetchJson('bojo-summary.json', 'summary');
+      const wealth = await fetchJson('bojo-wealth.json', 'wealth');
+      const love = await fetchJson('bojo-love.json', 'love');
+      const health = await fetchJson('bojo-health.json', 'health');
+      const colors = await fetchJson('bojo-color-number.json', 'lucky_color');
+      const numbers = await fetchJson('bojo-color-number.json', 'lucky_number');
+
+      const html = `
+        <h3>${ddi} + ${zodiac}</h3>
+        <p><strong>✨ Summary</strong><br>${pick(summary)}</p>
+        <p><span class="emoji">💰</span><strong>Wealth</strong><br>${pick(wealth)}</p>
+        <p><span class="emoji">❤️</span><strong>Love</strong><br>${pick(love)}</p>
+        <p><span class="emoji">🧘</span><strong>Health</strong><br>${pick(health)}</p>
+        <p><span class="emoji">🎨</span><strong>Lucky Color</strong><br>${pick(colors)}</p>
+        <p><span class="emoji">🔢</span><strong>Lucky Number</strong><br>${pick(numbers)}</p>
+      `;
+
+      document.getElementById('result').style.display = 'block';
+      document.getElementById('result').innerHTML = html;
+    }
+
+    async function fetchJson(url, key) {
+      try {
+        const res = await fetch(url);
+        const json = await res.json();
+        return json[key] || [];
+      } catch (err) {
+        console.error(`❌ Error loading ${url}:`, err);
+        return [`Error loading ${key}`];
+      }
+    }
+
+    function pick(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+  </script>
 </body>
 </html>
-
-<!-- Force rebuild for GitHub Pages -->
