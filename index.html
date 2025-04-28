@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>K-AFW Daily Fortune</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -13,7 +13,7 @@
       text-align: center;
     }
     .container {
-      max-width: 900px;
+      max-width: 800px;
       margin: 0 auto;
       background: white;
       padding: 30px;
@@ -54,6 +54,7 @@
       font-weight: bold;
       font-size: 20px;
       color: #0f172a;
+      margin-bottom: 10px;
     }
     .item {
       margin-left: 15px;
@@ -75,15 +76,8 @@
   </div>
 
   <script>
-    const zodiacSigns = [
-      "Capricorn", "Aquarius", "Pisces", "Aries", "Taurus", "Gemini",
-      "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius"
-    ];
-    const zodiacDates = [
-      [1, 20], [2, 19], [3, 21], [4, 20], [5, 21], [6, 22],
-      [7, 23], [8, 23], [9, 23], [10, 23], [11, 23], [12, 23]
-    ];
-
+    const zodiacSigns = ["Capricorn", "Aquarius", "Pisces", "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius"];
+    const zodiacDates = [[1, 20], [2, 19], [3, 21], [4, 20], [5, 21], [6, 22], [7, 23], [8, 23], [9, 23], [10, 23], [11, 23], [12, 23]];
     const animalSigns = ["Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse", "Sheep", "Monkey", "Rooster", "Dog", "Pig"];
 
     async function fetchJson(url) {
@@ -105,8 +99,8 @@
       return animalSigns[(year - 4) % 12];
     }
 
-    function getRandomItems(array, count) {
-      const shuffled = array.sort(() => 0.5 - Math.random());
+    function pickRandom(arr, count = 1) {
+      const shuffled = [...arr].sort(() => 0.5 - Math.random());
       return shuffled.slice(0, count);
     }
 
@@ -114,6 +108,7 @@
       const year = parseInt(document.getElementById('year').value);
       const month = parseInt(document.getElementById('month').value);
       const day = parseInt(document.getElementById('day').value);
+
       if (!year || !month || !day) {
         alert("Please fill in your full birthdate.");
         return;
@@ -122,46 +117,48 @@
       const western = getWesternZodiac(month, day);
       const chinese = getChineseZodiac(year);
 
-      const summary = await fetchJson('https://k-afw.github.io/k-afw/bojo-summary.json');
-      const wealth = await fetchJson('https://k-afw.github.io/k-afw/bojo-wealth.json');
-      const love = await fetchJson('https://k-afw.github.io/k-afw/bojo-love.json');
-      const health = await fetchJson('https://k-afw.github.io/k-afw/bojo-health.json');
-      const colorNumber = await fetchJson('https://k-afw.github.io/k-afw/bojo-color-number.json');
+      const summaryData = await fetchJson('https://k-afw.github.io/k-afw/bojo-summary.json');
+      const wealthData = await fetchJson('https://k-afw.github.io/k-afw/bojo-wealth.json');
+      const loveData = await fetchJson('https://k-afw.github.io/k-afw/bojo-love.json');
+      const healthData = await fetchJson('https://k-afw.github.io/k-afw/bojo-health.json');
+      const colorNumberData = await fetchJson('https://k-afw.github.io/k-afw/bojo-color-number.json');
 
-      const luckyColorRaw = getRandomItems(colorNumber.lucky_color, 1)[0];
-      const luckyColor = luckyColorRaw.split(" ")[0];
+      const luckyColor = pickRandom(colorNumberData.lucky_color, 1)[0].split(' ')[0];
+      const luckyNumber = pickRandom(colorNumberData.lucky_number, 1)[0].split(' ')[0];
 
-      const luckyNumberRaw = getRandomItems(colorNumber.lucky_number, 1)[0];
-      const luckyNumber = luckyNumberRaw.split(" ")[0];
+      const summary = pickRandom(summaryData.summary, 2);
+      const wealth = pickRandom(wealthData.wealth, 2);
+      const love = pickRandom(loveData.love, 2);
+      const health = pickRandom(healthData.health, 2);
 
       document.getElementById('result').innerHTML = `
         <h2>${chinese} + ${western}</h2>
         <div class="section">
-          <div class="section-title">\u2728 Summary</div>
-          <div class="item">- ${getRandomItems(summary.summary, 1)[0]}</div>
-          <div class="item">- ${getRandomItems(summary.summary, 1)[0]}</div>
+          <div class="section-title">✨ Summary</div>
+          <div class="item">- ${summary[0]}</div>
+          <div class="item">- ${summary[1]}</div>
         </div>
         <div class="section">
-          <div class="section-title">\uD83D\uDCB0 Wealth</div>
-          <div class="item">- ${getRandomItems(wealth.wealth, 1)[0]}</div>
-          <div class="item">- ${getRandomItems(wealth.wealth, 1)[0]}</div>
+          <div class="section-title">💰 Wealth</div>
+          <div class="item">- ${wealth[0]}</div>
+          <div class="item">- ${wealth[1]}</div>
         </div>
         <div class="section">
-          <div class="section-title">\u2764\uFE0F Love</div>
-          <div class="item">- ${getRandomItems(love.love, 1)[0]}</div>
-          <div class="item">- ${getRandomItems(love.love, 1)[0]}</div>
+          <div class="section-title">❤️ Love</div>
+          <div class="item">- ${love[0]}</div>
+          <div class="item">- ${love[1]}</div>
         </div>
         <div class="section">
-          <div class="section-title">\uD83D\uDC22 Health</div>
-          <div class="item">- ${getRandomItems(health.health, 1)[0]}</div>
-          <div class="item">- ${getRandomItems(health.health, 1)[0]}</div>
+          <div class="section-title">🩺 Health</div>
+          <div class="item">- ${health[0]}</div>
+          <div class="item">- ${health[1]}</div>
         </div>
         <div class="section">
-          <div class="section-title">\uD83C\uDFA8 Lucky Color</div>
+          <div class="section-title">🎨 Lucky Color</div>
           <div class="item">${luckyColor}</div>
         </div>
         <div class="section">
-          <div class="section-title">\uD83D\uDD22 Lucky Number</div>
+          <div class="section-title">🔢 Lucky Number</div>
           <div class="item">${luckyNumber}</div>
         </div>
       `;
