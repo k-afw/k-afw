@@ -101,10 +101,11 @@
       return `• ${arr[index1]}<br>• ${arr[index2]}`;
     }
 
-    async function fetchJson(url) {
+    async function fetchJson(url, key = null) {
       try {
         const res = await fetch(url);
-        return await res.json();
+        const json = await res.json();
+        return key ? json[key] : json;
       } catch (e) {
         return [];
       }
@@ -123,10 +124,10 @@
 
       const base = 'https://cdn.jsdelivr.net/gh/k-afw/k-afw';
 
-      const summary = await fetchJson(`${base}/bojo-summary.json`);
-      const wealth = await fetchJson(`${base}/bojo-wealth.json`);
-      const love = await fetchJson(`${base}/bojo-love.json`);
-      const health = await fetchJson(`${base}/bojo-health.json`);
+      const summary = await fetchJson(`${base}/bojo-summary.json`, 'summary');
+      const wealth = await fetchJson(`${base}/bojo-wealth.json`, 'wealth');
+      const love = await fetchJson(`${base}/bojo-love.json`, 'love');
+      const health = await fetchJson(`${base}/bojo-health.json`, 'health');
       const colors = await fetchJson(`${base}/bojo-color-number.json`);
       const numbers = await fetchJson(`${base}/bojo-color-number.json`);
 
