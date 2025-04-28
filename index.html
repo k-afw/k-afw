@@ -1,150 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>K-AFW Daily Fortune</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #fff;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    h2 {
-      text-align: center;
-    }
-    .card {
-      background-color: #fafafa;
-      border-radius: 10px;
-      padding: 30px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      max-width: 600px;
-      width: 100%;
-      margin-top: 20px;
-      text-align: left;
-    }
-    .emoji {
-      font-size: 1.2rem;
-    }
-    #result p {
-      margin: 10px 0;
-      line-height: 1.5;
-    }
-    input[type="number"] {
-      width: 80px;
-      padding: 8px;
-      margin: 0 5px;
-      font-size: 1rem;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 1rem;
-      background-color: #222;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      margin-top: 10px;
-      cursor: pointer;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <title>Discover Your Daily Fortune</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-  <h2>🧩 Discover Your Daily Fortune</h2>
+  <h1>Discover Your Daily Fortune</h1>
+
   <div>
-    <label>Enter your birthdate:</label><br />
-    <input type="number" id="year" placeholder="YYYY" />
-    <input type="number" id="month" placeholder="MM" />
-    <input type="number" id="day" placeholder="DD" />
-    <br />
+    <label>Enter your birthdate:</label><br>
+    <input type="number" id="year" placeholder="Year">
+    <input type="number" id="month" placeholder="Month">
+    <input type="number" id="day" placeholder="Day">
     <button onclick="generateFortune()">Get My Fortune</button>
   </div>
 
-  <div class="card" id="result" style="display: none"></div>
+  <div id="result"></div>
 
   <script>
-    function getZodiac(month, day) {
-      const signs = ["Capricorn", "Aquarius", "Pisces", "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius"];
-      const dates = [20, 19, 20, 20, 21, 21, 23, 23, 23, 23, 22, 22];
-      return day < dates[month - 1] ? signs[(month + 10) % 12] : signs[month - 1];
+    const base = 'https://k-afw.github.io/k-afw';
+
+    const zodiacSigns = [
+      "Capricorn", "Aquarius", "Pisces", "Aries", "Taurus", "Gemini",
+      "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius"
+    ];
+    const zodiacDates = [20, 19, 20, 20, 21, 21, 23, 23, 23, 23, 22, 22];
+
+    const zodiacAnimals = [
+      "Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake",
+      "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig"
+    ];
+
+    function getWesternZodiac(month, day) {
+      return (day < zodiacDates[month - 1]) ? zodiacSigns[(month + 10) % 12] : zodiacSigns[(month + 11) % 12];
     }
 
-    function getDdi(year) {
-      const animals = ["Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig"];
-      return animals[(year - 4) % 12];
+    function getKoreanZodiac(year) {
+      return zodiacAnimals[(year - 4) % 12];
     }
 
-    function generateSeed(year, month, day) {
-      const today = new Date();
-      const dateStr = today.getFullYear() + "" + (today.getMonth() + 1) + "" + today.getDate();
-      const birthStr = year + "" + month + "" + day;
-      let seed = 0;
-      const combined = dateStr + birthStr;
-      for (let i = 0; i < combined.length; i++) {
-        seed += combined.charCodeAt(i) * (i + 1);
-      }
-      return seed;
-    }
-
-    function seededRandom(seed) {
-      const x = Math.sin(seed++) * 10000;
-      return x - Math.floor(x);
-    }
-
-    function pickTwo(arr, seed) {
-      if (!Array.isArray(arr) || arr.length < 2) return "No data available.";
-      const index1 = Math.floor(seededRandom(seed) * arr.length);
-      const index2 = Math.floor(seededRandom(seed + 1) * arr.length);
-      return `• ${arr[index1]}<br>• ${arr[index2]}`;
-    }
-
-    async function fetchJson(url, key = null) {
+    async function fetchJson(url) {
       try {
         const res = await fetch(url);
-        const json = await res.json();
-        return key ? json[key] : json;
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          return data;
+        }
+        return [];
       } catch (e) {
+        console.error('fetchJson error:', e);
         return [];
       }
     }
 
+    function pickRandom(arr) {
+      if (!arr.length) return "No data available.";
+      const index = Math.floor(Math.random() * arr.length);
+      return arr[index];
+    }
+
     async function generateFortune() {
-      const year = parseInt(document.getElementById("year").value);
-      const month = parseInt(document.getElementById("month").value);
-      const day = parseInt(document.getElementById("day").value);
+      const year = parseInt(document.getElementById('year').value);
+      const month = parseInt(document.getElementById('month').value);
+      const day = parseInt(document.getElementById('day').value);
 
-      if (!year || !month || !day) return alert("Please enter a valid birthdate.");
-      if (year < 1940 || year > 2011) return alert("Year must be between 1940 and 2011.");
+      if (isNaN(year) || isNaN(month) || isNaN(day)) {
+        alert('Please enter a valid birthdate.');
+        return;
+      }
 
-      const zodiac = getZodiac(month, day);
-      const ddi = getDdi(year);
+      const zodiacAnimal = getKoreanZodiac(year);
+      const zodiacSign = getWesternZodiac(month, day);
 
-      const base = 'https://cdn.jsdelivr.net/gh/k-afw/k-afw';
+      const [summaries, wealths, loves, healths, colors, numbers] = await Promise.all([
+        fetchJson(`${base}/bojo-summary.json`),
+        fetchJson(`${base}/bojo-wealth.json`),
+        fetchJson(`${base}/bojo-love.json`),
+        fetchJson(`${base}/bojo-health.json`),
+        fetchJson(`${base}/bojo-color-number.json`),
+        fetchJson(`${base}/bojo-color-number.json`) // lucky number도 같은 파일 사용
+      ]);
 
-      const summary = await fetchJson(`${base}/bojo-summary.json`, 'summary');
-      const wealth = await fetchJson(`${base}/bojo-wealth.json`, 'wealth');
-      const love = await fetchJson(`${base}/bojo-love.json`, 'love');
-      const health = await fetchJson(`${base}/bojo-health.json`, 'health');
-      const colors = await fetchJson(`${base}/bojo-color-number.json`);
-      const numbers = await fetchJson(`${base}/bojo-color-number.json`);
-
-      const seed = generateSeed(year, month, day);
-
-      const html = `
-        <h3>${ddi} + ${zodiac}</h3>
-        <p><span class="emoji">✨</span> <strong>Summary</strong><br> ${pickTwo(summary, seed)}</p>
-        <p><span class="emoji">💰</span> <strong>Wealth</strong><br> ${pickTwo(wealth, seed + 10)}</p>
-        <p><span class="emoji">❤️</span> <strong>Love</strong><br> ${pickTwo(love, seed + 20)}</p>
-        <p><span class="emoji">🧬</span> <strong>Health</strong><br> ${pickTwo(health, seed + 30)}</p>
-        <p><span class="emoji">🎨</span> <strong>Lucky Color</strong><br> ${pickTwo(colors.lucky_color, seed + 40)}</p>
-        <p><span class="emoji">🔢</span> <strong>Lucky Number</strong><br> ${pickTwo(numbers.lucky_number, seed + 50)}</p>
+      const resultHTML = `
+        <div style="margin-top:20px; padding:20px; border-radius:10px; background:#f9f9f9;">
+          <h2>${zodiacAnimal} + ${zodiacSign}</h2>
+          <p>✨ <strong>Summary</strong><br>${pickRandom(summaries)}</p>
+          <p>💰 <strong>Wealth</strong><br>${pickRandom(wealths)}</p>
+          <p>❤️ <strong>Love</strong><br>${pickRandom(loves)}</p>
+          <p>🩺 <strong>Health</strong><br>${pickRandom(healths)}</p>
+          <p>🎨 <strong>Lucky Color</strong><br>${pickRandom(colors)}</p>
+          <p>🔢 <strong>Lucky Number</strong><br>${pickRandom(numbers)}</p>
+        </div>
       `;
 
-      document.getElementById("result").style.display = "block";
-      document.getElementById("result").innerHTML = html;
+      document.getElementById('result').innerHTML = resultHTML;
     }
   </script>
 </body>
