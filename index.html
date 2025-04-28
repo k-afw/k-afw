@@ -40,22 +40,24 @@
       return zodiacAnimals[(year - 4) % 12];
     }
 
-    async function fetchJson(url) {
+    async function fetchAndPick(url) {
       try {
         const res = await fetch(url);
         const data = await res.json();
-        if (Array.isArray(data)) {
-          return data;
-        }
-        return [];
+        if (Array.isArray(data.summary)) return randomPick(data.summary); // bojo-summary.json
+        if (Array.isArray(data.wealth)) return randomPick(data.wealth);   // bojo-wealth.json
+        if (Array.isArray(data.love)) return randomPick(data.love);       // bojo-love.json
+        if (Array.isArray(data.health)) return randomPick(data.health);   // bojo-health.json
+        if (Array.isArray(data.lucky_color)) return randomPick(data.lucky_color); // color/number 통합
+        if (Array.isArray(data.lucky_number)) return randomPick(data.lucky_number); 
+        return "No data available.";
       } catch (e) {
-        console.error('fetchJson error:', e);
-        return [];
+        console.error('fetch error:', e);
+        return "No data available.";
       }
     }
 
-    function pickRandom(arr) {
-      if (!arr.length) return "No data available.";
+    function randomPick(arr) {
       const index = Math.floor(Math.random() * arr.length);
       return arr[index];
     }
@@ -73,24 +75,26 @@
       const zodiacAnimal = getKoreanZodiac(year);
       const zodiacSign = getWesternZodiac(month, day);
 
-      const [summaries, wealths, loves, healths, colors, numbers] = await Promise.all([
-        fetchJson(`${base}/bojo-summary.json`),
-        fetchJson(`${base}/bojo-wealth.json`),
-        fetchJson(`${base}/bojo-love.json`),
-        fetchJson(`${base}/bojo-health.json`),
-        fetchJson(`${base}/bojo-color-number.json`),
-        fetchJson(`${base}/bojo-color-number.json`) // lucky number도 같은 파일 사용
+      const [summary, wealth, love, health, color1, color2, number1, number2] = await Promise.all([
+        fetchAndPick(`${base}/bojo-summary.json`),
+        fetchAndPick(`${base}/bojo-wealth.json`),
+        fetchAndPick(`${base}/bojo-love.json`),
+        fetchAndPick(`${base}/bojo-health.json`),
+        fetchAndPick(`${base}/bojo-color-number.json`),
+        fetchAndPick(`${base}/bojo-color-number.json`),
+        fetchAndPick(`${base}/bojo-color-number.json`),
+        fetchAndPick(`${base}/bojo-color-number.json`)
       ]);
 
       const resultHTML = `
         <div style="margin-top:20px; padding:20px; border-radius:10px; background:#f9f9f9;">
           <h2>${zodiacAnimal} + ${zodiacSign}</h2>
-          <p>✨ <strong>Summary</strong><br>${pickRandom(summaries)}</p>
-          <p>💰 <strong>Wealth</strong><br>${pickRandom(wealths)}</p>
-          <p>❤️ <strong>Love</strong><br>${pickRandom(loves)}</p>
-          <p>🩺 <strong>Health</strong><br>${pickRandom(healths)}</p>
-          <p>🎨 <strong>Lucky Color</strong><br>${pickRandom(colors)}</p>
-          <p>🔢 <strong>Lucky Number</strong><br>${pickRandom(numbers)}</p>
+          <p>✨ <strong>Summary</strong><br>${summary}</p>
+          <p>💰 <strong>Wealth</strong><br>${wealth}</p>
+          <p>❤️ <strong>Love</strong><br>${love}</p>
+          <p>🩺 <strong>Health</strong><br>${health}</p>
+          <p>🎨 <strong>Lucky Color</strong><br>• ${color1}<br>• ${color2}</p>
+          <p>🔢 <strong>Lucky Number</strong><br>• ${number1}<br>• ${number2}</p>
         </div>
       `;
 
