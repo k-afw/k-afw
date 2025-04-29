@@ -168,6 +168,10 @@
 
       document.getElementById('fortune').style.minHeight = "800px";
       document.getElementById('fortune').scrollIntoView({ behavior: 'smooth' });
+
+      // 💬 iframe 높이 자동 조정 메시지 보내기
+      const newHeight = document.body.scrollHeight;
+      parent.postMessage({ type: 'resize', height: newHeight }, '*');
     }
 
     function copyFortune() {
