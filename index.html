@@ -17,6 +17,8 @@
     }
     #fortune {
       margin-top: 30px;
+      min-height: 0;
+      transition: min-height 0.5s ease;
     }
     ul {
       padding-left: 20px;
@@ -96,8 +98,7 @@
     const zodiacAnimals = ["Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig"];
 
     function getZodiacAnimal(year) {
-      const animals = zodiacAnimals;
-      return animals[(year - 4) % 12];
+      return zodiacAnimals[(year - 4) % 12];
     }
 
     function getZodiacSign(month, day) {
@@ -111,98 +112,80 @@
     }
 
     async function generateFortune() {
-      const birthdateInput = document.getElementById('birthdate');
-      const birthdate = birthdateInput.value;
-
+      const birthInput = document.getElementById('birthdate');
+      const birthdate = birthInput.value;
       if (!birthdate) {
         alert('Please enter your birthdate!');
         return;
       }
 
-      localStorage.setItem('birthdate', birthdate);
-
-      const today = new Date().toISOString().slice(0, 10);
-      const fortuneKey = `fortune_${birthdate}_${today}`;
-
-      let fortuneHtml = localStorage.getItem(fortuneKey);
-      if (fortuneHtml) {
-        document.getElementById('fortune').innerHTML = fortuneHtml;
-        scrollToFortune();
-        return;
-      }
+      localStorage.setItem('savedBirthdate', birthdate);
 
       const [year, month, day] = birthdate.split('-').map(Number);
       const zodiacAnimal = getZodiacAnimal(year);
       const zodiacSign = getZodiacSign(month, day);
 
-      const fortuneTitle = `🎯 ${zodiacAnimal} + ${zodiacSign}`;
+      const today = new Date().toISOString().split('T')[0];
+      const storageKey = `${birthdate}-${today}`;
 
-      const [summaryData, wealthData, loveData, healthData, colorData, numberData] = await Promise.all([
-        fetch('https://k-afw-json.vercel.app/bojo-summary.json').then(res => res.json()),
-        fetch('https://k-afw-json.vercel.app/bojo-wealth.json').then(res => res.json()),
-        fetch('https://k-afw-json.vercel.app/bojo-love.json').then(res => res.json()),
-        fetch('https://k-afw-json.vercel.app/bojo-health.json').then(res => res.json()),
-        fetch('https://k-afw-json.vercel.app/bojo-color.json').then(res => res.json()),
-        fetch('https://k-afw-json.vercel.app/bojo-number.json').then(res => res.json())
-      ]);
+      let savedFortune = localStorage.getItem(storageKey);
 
-      function pickTwo(arr) {
-        const shuffled = [...arr].sort(() => 0.5 - Math.random());
-        return [shuffled[0], shuffled[1]];
+      if (savedFortune) {
+        document.getElementById('fortune').innerHTML = savedFortune;
+      } else {
+        const [summary, wealth, love, health, color, number] = await Promise.all([
+          fetch('https://k-afw-json.vercel.app/bojo-summary.json').then(res => res.json()),
+          fetch('https://k-afw-json.vercel.app/bojo-wealth.json').then(res => res.json()),
+          fetch('https://k-afw-json.vercel.app/bojo-love.json').then(res => res.json()),
+          fetch('https://k-afw-json.vercel.app/bojo-health.json').then(res => res.json()),
+          fetch('https://k-afw-json.vercel.app/bojo-color.json').then(res => res.json()),
+          fetch('https://k-afw-json.vercel.app/bojo-number.json').then(res => res.json())
+        ]);
+
+        function pickTwo(arr) {
+          const shuffled = [...arr].sort(() => 0.5 - Math.random());
+          return [shuffled[0], shuffled[1]];
+        }
+
+        function pickOne(arr) {
+          return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        const fortuneHtml = `
+          <h2>🎯 ${zodiacAnimal} + ${zodiacSign}</h2>
+          <h3>🌟 Summary</h3><ul><li>${pickTwo(summary.summary).join('</li><li>')}</li></ul>
+          <h3>💰 Wealth</h3><ul><li>${pickTwo(wealth.wealth).join('</li><li>')}</li></ul>
+          <h3>❤️ Love</h3><ul><li>${pickTwo(love.love).join('</li><li>')}</li></ul>
+          <h3>💪 Health</h3><ul><li>${pickTwo(health.health).join('</li><li>')}</li></ul>
+          <h3>🎨 Lucky Color</h3><p>${pickOne(color.color)}</p>
+          <h3>🔢 Lucky Number</h3><p>${pickOne(number.number)}</p>
+          <button class='copy-button' onclick='copyFortune()'>📋 Copy My Fortune</button>
+        `;
+
+        document.getElementById('fortune').innerHTML = fortuneHtml;
+        localStorage.setItem(storageKey, fortuneHtml);
       }
 
-      function pickOne(arr) {
-        return arr[Math.floor(Math.random() * arr.length)];
-      }
-
-      fortuneHtml = `
-        <h2>${fortuneTitle}</h2>
-
-        <h3>🌟 Summary</h3>
-        <ul><li>${pickTwo(summaryData.summary).join('</li><li>')}</li></ul>
-
-        <h3>💰 Wealth</h3>
-        <ul><li>${pickTwo(wealthData.wealth).join('</li><li>')}</li></ul>
-
-        <h3>❤️ Love</h3>
-        <ul><li>${pickTwo(loveData.love).join('</li><li>')}</li></ul>
-
-        <h3>💪 Health</h3>
-        <ul><li>${pickTwo(healthData.health).join('</li><li>')}</li></ul>
-
-        <h3>🎨 Lucky Color</h3>
-        <p>${pickOne(colorData.color)}</p>
-
-        <h3>🔢 Lucky Number</h3>
-        <p>${pickOne(numberData.number)}</p>
-
-        <button class="copy-button" onclick="copyFortune()">📋 Copy My Fortune</button>
-      `;
-
-      document.getElementById('fortune').innerHTML = fortuneHtml;
-      localStorage.setItem(fortuneKey, fortuneHtml);
-
-      scrollToFortune();
-    }
-
-    function scrollToFortune() {
+      document.getElementById('fortune').style.minHeight = "800px";
       document.getElementById('fortune').scrollIntoView({ behavior: 'smooth' });
     }
 
     function copyFortune() {
-      const text = document.getElementById('fortune').innerText;
-      navigator.clipboard.writeText(text).then(() => {
-        alert('Fortune copied to clipboard!');
-      });
+      const temp = document.createElement('textarea');
+      temp.value = document.getElementById('fortune').innerText;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand('copy');
+      document.body.removeChild(temp);
+      alert('Fortune copied to clipboard!');
     }
 
-    // 페이지 로딩 시 자동으로 저장된 생년월일 입력
-    window.onload = () => {
-      const savedBirthdate = localStorage.getItem('birthdate');
+    window.onload = function() {
+      const savedBirthdate = localStorage.getItem('savedBirthdate');
       if (savedBirthdate) {
         document.getElementById('birthdate').value = savedBirthdate;
       }
-    };
+    }
   </script>
 </body>
 </html>
