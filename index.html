@@ -2,76 +2,126 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Daily Fortune</title>
+  <title>Personalized Daily Fortune</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 30px;
+      max-width: 600px;
+      margin: auto;
+      background: #fffaf2;
+      color: #333;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    #fortune {
+      margin-top: 30px;
+    }
+    ul {
+      padding-left: 20px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Today's Fortune</h1>
+  <h1>🌟 Personalized Daily Fortune 🌟</h1>
+
+  <div style="text-align:center;">
+    <input type="date" id="birthdate" />
+    <button onclick="generateFortune()">Get My Fortune</button>
+  </div>
 
   <div id="fortune"></div>
 
   <script>
-    async function fetchData() {
+    const zodiacSigns = [
+      { sign: "Capricorn", start: "01-01", end: "01-19" },
+      { sign: "Aquarius", start: "01-20", end: "02-18" },
+      { sign: "Pisces", start: "02-19", end: "03-20" },
+      { sign: "Aries", start: "03-21", end: "04-19" },
+      { sign: "Taurus", start: "04-20", end: "05-20" },
+      { sign: "Gemini", start: "05-21", end: "06-20" },
+      { sign: "Cancer", start: "06-21", end: "07-22" },
+      { sign: "Leo", start: "07-23", end: "08-22" },
+      { sign: "Virgo", start: "08-23", end: "09-22" },
+      { sign: "Libra", start: "09-23", end: "10-22" },
+      { sign: "Scorpio", start: "10-23", end: "11-21" },
+      { sign: "Sagittarius", start: "11-22", end: "12-21" },
+      { sign: "Capricorn", start: "12-22", end: "12-31" }
+    ];
+
+    const zodiacAnimals = ["Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig"];
+
+    function getZodiacAnimal(year) {
+      const animals = zodiacAnimals;
+      return animals[(year - 4) % 12];
+    }
+
+    function getZodiacSign(month, day) {
+      const date = `${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+      for (let z of zodiacSigns) {
+        if (date >= z.start && date <= z.end) {
+          return z.sign;
+        }
+      }
+      return "Capricorn"; // 12월 31일
+    }
+
+    async function generateFortune() {
+      const birthdate = document.getElementById('birthdate').value;
+      if (!birthdate) {
+        alert('Please enter your birthdate!');
+        return;
+      }
+
+      const [year, month, day] = birthdate.split('-').map(Number);
+      const zodiacAnimal = getZodiacAnimal(year);
+      const zodiacSign = getZodiacSign(month, day);
+
+      const fortuneTitle = `🎯 ${zodiacAnimal} + ${zodiacSign}`;
+
       const [summaryData, wealthData, loveData, healthData, colorData, numberData] = await Promise.all([
-        fetch('bojo-summary.json').then(res => res.json()),
-        fetch('bojo-wealth.json').then(res => res.json()),
-        fetch('bojo-love.json').then(res => res.json()),
-        fetch('bojo-health.json').then(res => res.json()),
-        fetch('bojo-color.json').then(res => res.json()),
-        fetch('bojo-number.json').then(res => res.json())
+        fetch('https://k-afw-json.vercel.app/bojo-summary.json').then(res => res.json()),
+        fetch('https://k-afw-json.vercel.app/bojo-wealth.json').then(res => res.json()),
+        fetch('https://k-afw-json.vercel.app/bojo-love.json').then(res => res.json()),
+        fetch('https://k-afw-json.vercel.app/bojo-health.json').then(res => res.json()),
+        fetch('https://k-afw-json.vercel.app/bojo-color.json').then(res => res.json()),
+        fetch('https://k-afw-json.vercel.app/bojo-number.json').then(res => res.json())
       ]);
 
-      function randomTwo(arr) {
-        const shuffled = arr.sort(() => 0.5 - Math.random());
+      function pickTwo(arr) {
+        const shuffled = [...arr].sort(() => 0.5 - Math.random());
         return [shuffled[0], shuffled[1]];
       }
 
-      function randomOne(arr) {
+      function pickOne(arr) {
         return arr[Math.floor(Math.random() * arr.length)];
       }
 
-      const summaryTwo = randomTwo(summaryData.summary);
-      const wealthTwo = randomTwo(wealthData.wealth);
-      const loveTwo = randomTwo(loveData.love);
-      const healthTwo = randomTwo(healthData.health);
-      const colorOne = randomOne(colorData.color);
-      const numberOne = randomOne(numberData.number);
-
       const fortuneHtml = `
-        <h2>🌟 Summary:</h2>
-        <ul>
-          <li>${summaryTwo[0]}</li>
-          <li>${summaryTwo[1]}</li>
-        </ul>
+        <h2>${fortuneTitle}</h2>
 
-        <h2>💰 Wealth:</h2>
-        <ul>
-          <li>${wealthTwo[0]}</li>
-          <li>${wealthTwo[1]}</li>
-        </ul>
+        <h3>🌟 Summary</h3>
+        <ul><li>${pickTwo(summaryData.summary).join('</li><li>')}</li></ul>
 
-        <h2>❤️ Love:</h2>
-        <ul>
-          <li>${loveTwo[0]}</li>
-          <li>${loveTwo[1]}</li>
-        </ul>
+        <h3>💰 Wealth</h3>
+        <ul><li>${pickTwo(wealthData.wealth).join('</li><li>')}</li></ul>
 
-        <h2>💪 Health:</h2>
-        <ul>
-          <li>${healthTwo[0]}</li>
-          <li>${healthTwo[1]}</li>
-        </ul>
+        <h3>❤️ Love</h3>
+        <ul><li>${pickTwo(loveData.love).join('</li><li>')}</li></ul>
 
-        <h2>🎨 Lucky Color:</h2>
-        <p>${colorOne}</p>
+        <h3>💪 Health</h3>
+        <ul><li>${pickTwo(healthData.health).join('</li><li>')}</li></ul>
 
-        <h2>🔢 Lucky Number:</h2>
-        <p>${numberOne}</p>
+        <h3>🎨 Lucky Color</h3>
+        <p>${pickOne(colorData.color)}</p>
+
+        <h3>🔢 Lucky Number</h3>
+        <p>${pickOne(numberData.number)}</p>
       `;
 
       document.getElementById('fortune').innerHTML = fortuneHtml;
     }
-
-    fetchData();
   </script>
 </body>
 </html>
