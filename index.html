@@ -7,7 +7,7 @@
     body {
       font-family: sans-serif;
       padding: 30px;
-      max-width: 600px;
+      max-width: 700px;
       margin: auto;
       background: #fffaf2;
       color: #333;
@@ -21,14 +21,57 @@
     ul {
       padding-left: 20px;
     }
+    .copy-button {
+      display: block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .copy-button:hover {
+      background-color: #1976D2;
+    }
+    .input-section {
+      text-align: center;
+      margin-top: 30px;
+    }
+    input[type="date"] {
+      padding: 12px 20px;
+      font-size: 18px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      width: 250px;
+      max-width: 90%;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    button.generate-button {
+      padding: 12px 24px;
+      font-size: 18px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      margin-top: 10px;
+    }
+    button.generate-button:hover {
+      background-color: #45a049;
+    }
   </style>
 </head>
 <body>
   <h1>🌟 Personalized Daily Fortune 🌟</h1>
 
-  <div style="text-align:center;">
+  <div class="input-section">
     <input type="date" id="birthdate" />
-    <button onclick="generateFortune()">Get My Fortune</button>
+    <br/>
+    <button class="generate-button" onclick="generateFortune()">🔮 Get My Fortune</button>
   </div>
 
   <div id="fortune"></div>
@@ -64,13 +107,27 @@
           return z.sign;
         }
       }
-      return "Capricorn"; // 12월 31일
+      return "Capricorn";
     }
 
     async function generateFortune() {
-      const birthdate = document.getElementById('birthdate').value;
+      const birthdateInput = document.getElementById('birthdate');
+      const birthdate = birthdateInput.value;
+
       if (!birthdate) {
         alert('Please enter your birthdate!');
+        return;
+      }
+
+      localStorage.setItem('birthdate', birthdate);
+
+      const today = new Date().toISOString().slice(0, 10);
+      const fortuneKey = `fortune_${birthdate}_${today}`;
+
+      let fortuneHtml = localStorage.getItem(fortuneKey);
+      if (fortuneHtml) {
+        document.getElementById('fortune').innerHTML = fortuneHtml;
+        scrollToFortune();
         return;
       }
 
@@ -98,7 +155,7 @@
         return arr[Math.floor(Math.random() * arr.length)];
       }
 
-      const fortuneHtml = `
+      fortuneHtml = `
         <h2>${fortuneTitle}</h2>
 
         <h3>🌟 Summary</h3>
@@ -118,10 +175,34 @@
 
         <h3>🔢 Lucky Number</h3>
         <p>${pickOne(numberData.number)}</p>
+
+        <button class="copy-button" onclick="copyFortune()">📋 Copy My Fortune</button>
       `;
 
       document.getElementById('fortune').innerHTML = fortuneHtml;
+      localStorage.setItem(fortuneKey, fortuneHtml);
+
+      scrollToFortune();
     }
+
+    function scrollToFortune() {
+      document.getElementById('fortune').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function copyFortune() {
+      const text = document.getElementById('fortune').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Fortune copied to clipboard!');
+      });
+    }
+
+    // 페이지 로딩 시 자동으로 저장된 생년월일 입력
+    window.onload = () => {
+      const savedBirthdate = localStorage.getItem('birthdate');
+      if (savedBirthdate) {
+        document.getElementById('birthdate').value = savedBirthdate;
+      }
+    };
   </script>
 </body>
 </html>
