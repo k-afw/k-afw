@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Daily Fortune</title>
+</head>
+<body>
+  <h1>Today's Fortune</h1>
+
+  <div id="fortune"></div>
+
+  <script>
+    async function fetchData() {
+      const [summaryData, wealthData, loveData, healthData, colorData, numberData] = await Promise.all([
+        fetch('bojo-summary.json').then(res => res.json()),
+        fetch('bojo-wealth.json').then(res => res.json()),
+        fetch('bojo-love.json').then(res => res.json()),
+        fetch('bojo-health.json').then(res => res.json()),
+        fetch('bojo-color.json').then(res => res.json()),
+        fetch('bojo-number.json').then(res => res.json())
+      ]);
+
+      function randomTwo(arr) {
+        const shuffled = arr.sort(() => 0.5 - Math.random());
+        return [shuffled[0], shuffled[1]];
+      }
+
+      function randomOne(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+      }
+
+      const summaryTwo = randomTwo(summaryData.summary);
+      const wealthTwo = randomTwo(wealthData.wealth);
+      const loveTwo = randomTwo(loveData.love);
+      const healthTwo = randomTwo(healthData.health);
+      const colorOne = randomOne(colorData.color);
+      const numberOne = randomOne(numberData.number);
+
+      const fortuneHtml = `
+        <h2>🌟 Summary:</h2>
+        <ul>
+          <li>${summaryTwo[0]}</li>
+          <li>${summaryTwo[1]}</li>
+        </ul>
+
+        <h2>💰 Wealth:</h2>
+        <ul>
+          <li>${wealthTwo[0]}</li>
+          <li>${wealthTwo[1]}</li>
+        </ul>
+
+        <h2>❤️ Love:</h2>
+        <ul>
+          <li>${loveTwo[0]}</li>
+          <li>${loveTwo[1]}</li>
+        </ul>
+
+        <h2>💪 Health:</h2>
+        <ul>
+          <li>${healthTwo[0]}</li>
+          <li>${healthTwo[1]}</li>
+        </ul>
+
+        <h2>🎨 Lucky Color:</h2>
+        <p>${colorOne}</p>
+
+        <h2>🔢 Lucky Number:</h2>
+        <p>${numberOne}</p>
+      `;
+
+      document.getElementById('fortune').innerHTML = fortuneHtml;
+    }
+
+    fetchData();
+  </script>
+</body>
+</html>
